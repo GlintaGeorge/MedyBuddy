@@ -18,7 +18,7 @@ const refreshTokenRoute = () => {
     doctorRepositoryMongodb,
   );
 
-  console.log("inside the route controller .... ... .. . . .. ... ....")
+  
   router.get("/accessToken", controller.returnAccessToClient);
   router.post("/refresh_token", controller.getNewAccessToken);
 

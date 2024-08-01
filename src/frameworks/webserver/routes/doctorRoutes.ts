@@ -11,6 +11,11 @@ import { departmentDbRepository } from "../../../app/interfaces/departmentReposi
 import { userRepositoryMongodb } from '../../database/mongodb/repositories/userRepositoryMongodb';
 import { userDbRepository } from '../../../app/interfaces/userDbRepository';
 import { departmentRepositoryMongodb } from "../../database/mongodb/repositories/departmentRepositoryMongodb";
+import { bookingDbRepository } from "../../../app/interfaces/bookingrepository";
+import bookingController from "../../../adapters/bookingController";
+import { bookingRepositoryMongodb } from "../../database/mongodb/repositories/bookingRepositoryMongodb";
+import { prescriptionDbRepository } from "../../../app/interfaces/prescriptionDbRepositort";
+import { PrescriptionRepositoryMongodbType, prescriptionRepositoryMongodb } from "../../database/mongodb/repositories/prescriptionRepositoryMongodb";
 
 const doctorRoute = () => {
     const router = express.Router();
@@ -26,8 +31,24 @@ const doctorRoute = () => {
         userDbRepository,
         userRepositoryMongodb, 
         departmentDbRepository,
-        departmentRepositoryMongodb
+        bookingDbRepository,
+        bookingRepositoryMongodb,
+        prescriptionDbRepository,
+        prescriptionRepositoryMongodb,
+        departmentRepositoryMongodb,
     );
+
+    
+    const _bookingController = bookingController(
+        userDbRepository,
+        userRepositoryMongodb,
+        doctorDbRepository,
+        doctorRepositoryMongodb,
+        timeSlotDbRepository,
+        timeSlotRepositoryMongodb,
+        bookingDbRepository,
+        bookingRepositoryMongodb,
+    )
 
    
 
@@ -40,12 +61,26 @@ const doctorRoute = () => {
     router.patch("/profile/edit",authenticateDoctor,controller.updateDoctorInfo);
     router.get("/status",authenticateDoctor,controller.doctorStatus);
 
-    router.post("/addSlot",authenticateDoctor,controller.addSlot); 
-    router.post("/getTimeSlots",authenticateDoctor,controller.getTimeSlots);
-    router.delete("/deleteSlot/:id",authenticateDoctor,controller.deleteSlot);
+    // router.post("/addSlot",authenticateDoctor,controller.addSlot); 
+    // router.post("/getTimeSlots",authenticateDoctor,controller.getTimeSlots);
+    // router.delete("/deleteSlot/:id",authenticateDoctor,controller.deleteSlot);
+
+
+    router.post("/schedule",authenticateDoctor,controller.scheduleTime);
+    router.get("/timeslots",authenticateDoctor,controller.getTimeSlots)
+    router.delete("/deleteTime/:id",authenticateDoctor,controller.removeTimeSlot)
+
+    
     router.get('/departments', controller.listDepartmentsHandler);
     router.get("/doctorDetails/:id",authenticateDoctor,controller.getDoctorDetails);
     router.put("/reapply_verification/:id",authenticateDoctor,controller.getDoctorRejected)
+    router.get("/user/:id", authenticateDoctor,controller.userDetails);
+    router.get("/patients",authenticateDoctor,controller.getPatientList);
+    router.get("/patients/:id",authenticateDoctor,controller.getPatientDetails);
+    router.post("/addPrescription",authenticateDoctor,controller.addPrescription);
+    router.get("/prescription/:id",authenticateDoctor,controller.fetchPrescription);
+    router.delete("/prescription/:id",authenticateDoctor,controller.deletePrescription);
+    router.get("/bookingdetails/:id",authenticateDoctor,_bookingController.getAppoinmentList)
     
 
     return router;

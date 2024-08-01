@@ -17,9 +17,12 @@ const bookingSchema = new mongoose.Schema({
   patientGender:{
     type:String,
   },
-    consultationType: {
-    type: String,
-    required: true,
+  //   consultationType: {
+  //   type: String,
+  //   required: true,
+  // },
+  patientProblem:{
+    type:String,
   },
   fee: {
     type: Number,
@@ -48,7 +51,7 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+},{timestamps:true});
 
 
 export default mongoose.model("Booking",bookingSchema);

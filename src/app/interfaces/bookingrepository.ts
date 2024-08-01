@@ -28,6 +28,9 @@ export const bookingDbRepository = (
   const getAllBookingByUserId = async (userId: string) =>
     await repository.getAllBookingByUserId(userId);
 
+  const checkBookingStatus = async (doctorId:string,date:string,timeSlot:string)=>
+    await repository.changeBookingStatus(doctorId,date,timeSlot)
+
   const getAllBookingByDoctorId = async (doctorId: string) =>
     await repository.getAllBookingByDoctorId(doctorId);
 
@@ -57,6 +60,9 @@ export const bookingDbRepository = (
     const amount = await repository.amountCredit(fee,UserId);
   }
 
+  const changeBookingAppoinmentStatus = async (appoinmentStatus:string,id:string)=>
+    await repository.changeBookingAppoinmentStatus(appoinmentStatus,id);
+
 
 
     return {
@@ -75,6 +81,9 @@ export const bookingDbRepository = (
         getBalanceAmount,
         debitAmount,
         creditAmount,
+        checkBookingStatus,
+        changeBookingAppoinmentStatus,
+        
        
     }
   }

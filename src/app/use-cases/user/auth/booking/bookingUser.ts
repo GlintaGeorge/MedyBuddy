@@ -1,15 +1,9 @@
 import bookingEntity from "../../../../../entities/bookingEntity";
 import { BookingDbRepositoryInterface } from "../../../../interfaces/bookingrepository";
-import { doctorDbInterface, doctorDbRepository } from "../../../../interfaces/doctorDBRepository";
+import { doctorDbInterface } from "../../../../interfaces/doctorDBRepository";
 import configKeys from "../../../../../config";
-import { TimeSlotDbInterface } from "../../../../interfaces/timeSlotDbRepository";
-import { userDbInterface } from "../../../../interfaces/userDbRepository";
-import CustomError from "../../../../../utils/customError";
-import { HttpStatus } from "../../../../../types/httpStatus";
-import { Types } from "mongoose";
-import { ObjectId } from "mongoose";
 import Stripe from "stripe";
-import { log } from "console";
+
 
 
 export const appoinmentBooking = async(
@@ -18,7 +12,7 @@ export const appoinmentBooking = async(
     bookingDbRepository: ReturnType<BookingDbRepositoryInterface>,
     doctorDbRepository: ReturnType<doctorDbInterface>,
 )=>{
-    const { doctorId, patientDetails: { patientName, patientAge, patientNumber, patientGender }, consultationType, fee, paymentStatus,appoinmentStatus,appoinmentCancelReason, date, timeSlot } = data;
+    const { doctorId, patientName, patientAge, patientNumber, patientGender, patientProblem, fee, paymentStatus,appoinmentStatus,appoinmentCancelReason, date, timeSlot } = data;
     const doctorDetails = await doctorDbRepository.getDoctorById(doctorId);
     const appoinment = bookingEntity(
         userId,
@@ -27,7 +21,7 @@ export const appoinmentBooking = async(
         patientAge,
         patientNumber,
         patientGender,
-        consultationType,
+        patientProblem,
         fee,
         paymentStatus,
         appoinmentStatus,
@@ -38,7 +32,7 @@ export const appoinmentBooking = async(
     );
 
     const booking = await bookingDbRepository.createBooking(appoinment);
-    console.log(booking,"booking use in app")
+    
 
 
     return booking;
@@ -50,29 +44,21 @@ export const checkIsBooked = async(
   userId:any,
   bookingDbRepository: ReturnType<BookingDbRepositoryInterface>,
 )=>{
-  const { doctorId, patientDetails: { patientName, patientAge, patientNumber, patientGender }, consultationType, fee, paymentStatus,appoinmentStatus,appoinmentCancelReason, date, timeSlot } = data;
-  const appoinment = bookingEntity(
-      userId,
-      doctorId,
-      patientName,
-      patientAge,
-      patientNumber,
-      patientGender,
-      consultationType,
-      fee,
-      paymentStatus,
-      appoinmentStatus,
-      appoinmentCancelReason,
-      date,
-      timeSlot,
+  const { doctorId, patientName, patientAge, patientNumber, patientGender , patientProblem, fee, paymentStatus,appoinmentStatus,appoinmentCancelReason, date, timeSlot } = data;
+  
+  const Booking = await bookingDbRepository.checkBookingStatus(doctorId,date,timeSlot)
+  let temp:boolean = false
 
-  );
-
-  const isBooked = await bookingDbRepository.deleteSlot(doctorId,date,timeSlot);
-
-
-  return isBooked;
+  
+  
+  return temp
 }
+
+export const changeAppoinmentStatus = async (
+  appoinmentStatus:string,
+  id:any,
+  bookingRepository:ReturnType<BookingDbRepositoryInterface>
+)=> await bookingRepository.changeBookingAppoinmentStatus(appoinmentStatus,id);
 
 
 
@@ -101,7 +87,7 @@ export const createPayment = async (
         {
           price_data: {
             currency: "inr",
-            product_data: { name: "Guests", description: "Table booking" },
+            product_data: { name: "Guests", description: "MediBuddy - Doctor Booking" },
             unit_amount: Math.round(totalAmount * 100),
           },
           quantity: 1,
@@ -166,13 +152,22 @@ export const createPayment = async (
    //@ts-ignore
   const UserId = booking?.userId;
 
+  //@ts-ignore
+  const doctorId:any = booking?.doctorId;
+  //@ts-ignore
+ const timeSlot = booking?.timeSlot;
+  //@ts-ignore
+  const date:any = booking?.date;
+
+
      //@ts-ignore
   const changeWalletAmount = await bookingRepository.changeWallet(fee,UserId);
 
   const walletTransaction = await bookingRepository.creditAmount(fee,UserId);
 
-     return {changeStatus,
-      changeWalletAmount
+     return {doctorId,
+      timeSlot,
+      date
      };
   }
 
@@ -193,6 +188,13 @@ export const createPayment = async (
     const debit = await bookingRepository.debitAmount(userId,Amount);
   }
 
+  export const changeWalletAmounti = async (
+    UserId:any,
+    fees:any,
+    bookingRepository:ReturnType<BookingDbRepositoryInterface>
+  )=>{
+    const changeupdated = await bookingRepository.changeTheWalletAmount(fees,UserId)
+  }
 
 
   export const changeWallet = async (

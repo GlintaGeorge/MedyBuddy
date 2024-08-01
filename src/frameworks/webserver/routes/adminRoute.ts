@@ -25,21 +25,21 @@ export default () =>{
     );
 
     router.post("/login", controller.adminLogin);
-    router.get("/users", controller.getAllUser);
-    router.get("/doctors", controller.getAllTheDoctors);
-    router.patch("/block_user/:id", controller.userBlock);
-    router.patch("/block_doctor/:id", controller.doctorBlock);
-    router.get("/doctors/:id", controller.doctorDetails);
-    router.patch("/verify_doctor/:id", controller.VerifyDoctor);
+    router.get("/users", authenticateAdmin,controller.getAllUser);
+    router.get("/doctors", authenticateAdmin,controller.getAllTheDoctors);
+    router.patch("/block_user/:id", authenticateAdmin,controller.userBlock);
+    router.patch("/block_doctor/:id", authenticateAdmin,controller.doctorBlock);
+    router.get("/doctors/:id", authenticateAdmin,controller.doctorDetails);
+    router.patch("/verify_doctor/:id",authenticateAdmin, controller.VerifyDoctor);
     router.patch("/verify_doctor_rejection/:id",controller.rejectionDoctor);
-
-    // router.post('/addDepartment', controller.addDepartmentHandler);
-    router.get('/department', controller.getAllDepartmentsHandler);
-    router.post('/addDepartment', controller.addDepartmentHandler);
-    router.get('/department/list', controller.listDepartmentsHandler);
-    router.put('/department/:id', controller.updateDepartmentHandler);
-    router.patch('/block_department/:id', controller.blockDepartmentHandler);
-    router.patch('/unblock_department/:id', controller.unblockDepartmentHandler);
+    router.get("/payments",authenticateAdmin, controller.getAllPayments);
+    router.get("/appoinments",authenticateAdmin, controller.getAllAppoinments);
+    router.get('/department',authenticateAdmin, controller.getAllDepartmentsHandler);
+    router.post('/addDepartment',authenticateAdmin, controller.addDepartmentHandler);
+    router.get('/department/list',authenticateAdmin, controller.listDepartmentsHandler);
+    router.put('/department/:id', authenticateAdmin,controller.updateDepartmentHandler);
+    router.patch('/block_department/:id',authenticateAdmin, controller.blockDepartmentHandler);
+    router.patch('/unblock_department/:id', authenticateAdmin, controller.unblockDepartmentHandler);
 
     
 

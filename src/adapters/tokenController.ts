@@ -32,7 +32,6 @@ const tokenContoller = (
    */
   // refresh access token
   const getNewAccessToken = (req: Request, res: Response) => {
-    console.log("inside the refresh token controller.......................................")
     const { refresh_token } = req.body;
 
     if (!refresh_token) {
@@ -73,7 +72,6 @@ const tokenContoller = (
 
   const returnAccessToClient = async (req: Request, res: Response) => {
     try {
-    console.log("inside the access token controller.......................................")
 
     const { access_token } = req.query as { access_token: string };
     if (!access_token)

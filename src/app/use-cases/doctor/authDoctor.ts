@@ -17,7 +17,7 @@ export const addNewDoctor = async(
     doctorRepository:ReturnType<doctorDbInterface>,
     authService:ReturnType<AuthServiceInterfaceType>
 )=>{
-    const { doctorName, email, password,phoneNumber,department,consultationType,education,description,experience,lisenceCertificate,rejectedReason } = doctorData;
+    const { doctorName, email, password,phoneNumber,department,education,description,experience,lisenceCertificate,rejectedReason } = doctorData;
   const isEmailExist = await doctorRepository.getDoctorByemail(email);
   if (isEmailExist)
     throw new CustomError("Email already exists", HttpStatus.BAD_REQUEST);
@@ -31,7 +31,7 @@ export const addNewDoctor = async(
     verificationToken,
     phoneNumber,
     department,
-    consultationType,
+    
     education,
     description,
     experience,
@@ -61,10 +61,8 @@ export const verifyAccount = async (
     token: string,
     doctorRepository: ReturnType<doctorDbInterface>
   ) => {
-    const updateVerification = await doctorRepository.verifyDoctor(token);console.log('====================================');
-    console.log(token,"tokenid");
-
-    console.log('====================================');
+    const updateVerification = await doctorRepository.verifyDoctor(token);
+    
     if (!updateVerification)
       throw new CustomError("Invalid token", HttpStatus.BAD_REQUEST);
     return updateVerification;

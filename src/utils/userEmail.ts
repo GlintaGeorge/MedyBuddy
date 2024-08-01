@@ -131,7 +131,7 @@ export const otpEmail = (otp: string, name: string) => {
         <p>Dear ${name},</p>
         <p>We have received a request to reset your password. To reset your password, click the button below:</p>
         <p style="text-align: center;">
-          <a href="http://localhost:5173/user/reset_password/${verificationCode}" class="button" style="color:white">Reset Password</a>
+          <a href="http://localhost:5173/reset_password/${verificationCode}" class="button" style="color:white">Reset Password</a>
         </p>
         <p>If you didn't request a password reset, you can ignore this email. Your password will remain unchanged.</p>
         <p>Thank you for using our service!</p>

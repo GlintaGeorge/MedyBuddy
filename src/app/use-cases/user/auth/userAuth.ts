@@ -111,7 +111,10 @@ export const login = async(
     authService:ReturnType<AuthServiceInterfaceType>
 )=>{
     const {email,password} = user;
+
     const isEmailExist = await userDbRepository.getUserbyEmail(email);
+
+
    
 
     if(isEmailExist?.authenticationMethod === "google"){
@@ -166,9 +169,7 @@ export const sendResetVerificationCode = async (
       throw new CustomError(`${email} does not exist`, HttpStatus.BAD_REQUEST);
   
     const verificationCode = authService.getRandomString();
-    console.log('====================================');
     console.log(verificationCode);
-    console.log('====================================');
   
     const isUpdated = await userDbRepository.updateVerificationCode(
       email,

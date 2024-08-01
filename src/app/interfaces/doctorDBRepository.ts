@@ -60,6 +60,9 @@ const getFilteredDoctors = async ({
     limit,
   });
 
+  const getAllAppoinments = async () => await repository.getAllAppoinments();
+  const getAllPayments = async () => await repository.getAllPayments();
+
   return {
     getDoctorById,
     getDoctorByemail,
@@ -73,6 +76,9 @@ const getFilteredDoctors = async ({
     getRejectedDoctorById,
     getDoctorByIdUpdateRejected,
     getFilteredDoctors,
+    getAllAppoinments,
+    getAllPayments,
+
     
     
     

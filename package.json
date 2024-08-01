@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npx tsc",
+    "start": "node dist/app.js",
     "dev": "nodemon ./src/app.ts"
   },
   "keywords": [],
@@ -12,6 +14,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^3.5.0",
     "@types/rrule": "^2.2.9",
+    "@types/socket.io": "^3.0.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -23,9 +26,11 @@
     "mongoose": "^8.3.3",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.13",
+    "pdfkit": "^0.15.0",
     "react-datepicker": "^7.0.0",
     "react-toastify": "^10.0.5",
     "rrule": "^2.8.1",
+    "socket.io": "^4.7.5",
     "stripe": "^15.11.0",
     "typescript": "^5.4.5"
   },
@@ -37,6 +42,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.12.8",
     "@types/nodemailer": "^6.4.15",
+    "@types/pdfkit": "^0.13.4",
     "@types/react-datepicker": "^6.2.0"
   }
 }

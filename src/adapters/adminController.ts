@@ -9,6 +9,8 @@ import {getUsers,
     getDoctor,
     getDoctorRejected,
     getAllDoctors,
+    getAllTheAppoinments,
+    getAllThePayments,
 
     
   } from "../app/use-cases/admin/adminRead";
@@ -103,6 +105,7 @@ const getAllTheDoctors = async (
     next: NextFunction
   ) => {
     try {
+      
       const doctors = await getAllDoctors(dbDoctorRepository);
       return res.status(HttpStatus.OK).json({ success: true, doctors });
     } catch (error) {
@@ -127,6 +130,42 @@ const getAllTheDoctors = async (
       next(error);
     }
   };
+
+  /**method get fetch all appoinments */
+
+const getAllAppoinments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    
+    const appoinments = await getAllTheAppoinments(dbDoctorRepository);
+    
+    return res.status(HttpStatus.OK).json({ success: true, appoinments });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+/**method get fetch all appoinments */
+
+const getAllPayments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    
+    const payments = await getAllThePayments(dbDoctorRepository);
+
+    
+    return res.status(HttpStatus.OK).json({ success: true, payments });
+  } catch (error) {
+    next(error);
+  }
+};
 
   /*
    * METHOD:PATCH
@@ -234,7 +273,6 @@ const getAllTheDoctors = async (
   ) => {
     try {
       const { id } = req.params;
-      console.log("ëdit,,,,,,,,,,,,,,,,,,,,,")
       const departmentName = req.body;
      const update =  await updateDepartment(id, departmentName, dbDepartmentRepository);
       return res
@@ -252,7 +290,7 @@ const getAllTheDoctors = async (
     next: NextFunction
   ) => {
     try {
-      console.log("vanaloo njn ivdaaa :-)")
+      
       const { id } = req.params;
       await blockDepartment(id, dbDepartmentRepository);
       return res
@@ -287,9 +325,8 @@ const getAllTheDoctors = async (
     next: NextFunction
   ) => {
     try {
-      console.log("............................................................................")
+      
       const departments = await listDepartments(dbDepartmentRepository);
-      console.log("............................................................................",departments)
       return res.status(HttpStatus.OK).json({ success: true, departments });
     } catch (error) {
       next(error);
@@ -331,6 +368,10 @@ const getAllTheDoctors = async (
        unblockDepartmentHandler,
        listDepartmentsHandler,
        unlistDepartmentsHandler,
+       getAllAppoinments,
+       getAllPayments,
+
+
 
 
 

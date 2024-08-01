@@ -14,6 +14,8 @@ import { timeSlotRepositoryMongodb } from "../../database/mongodb/repositories/t
 import bookingController from "../../../adapters/bookingController";
 import { bookingDbRepository } from "../../../app/interfaces/bookingrepository";
 import { bookingRepositoryMongodb } from "../../database/mongodb/repositories/bookingRepositoryMongodb";
+import { prescriptionDbRepository } from "../../../app/interfaces/prescriptionDbRepositort";
+import { prescriptionRepositoryMongodb } from "../../database/mongodb/repositories/prescriptionRepositoryMongodb";
 
 const userRoutes = () => {
     const router = express.Router();
@@ -32,6 +34,8 @@ const userRoutes = () => {
         departmentRepo,  // Instantiate here
         timeSlotDbRepository,
         timeSlotRepositoryMongodb,
+        prescriptionDbRepository,
+        prescriptionRepositoryMongodb,
     );
 
     const _bookingController = bookingController(
@@ -54,17 +58,20 @@ const userRoutes = () => {
     router.post("/reset_password/:token", controller.resetPassword);
 
     router.get("/profile", authenticateUser, controller.userProfile);
-    console.log("inside the route");
     router.patch("/profile/edit", authenticateUser, controller.updateUserInfo);
 
     router.get("/doctors", controller.doctorPage);
-    router.get("/doctor/:id", controller.doctorDetails);
+    router.get("/doctors/:id", controller.doctorDetails);
     router.get('/departments', controller.listDepartmentsHandler);
-    router.get("/timeslots", authenticateUser, controller.getAllTimeSlots);
-    router.get("/timeslots/:id", authenticateUser, controller.getTimeslots);
-    router.get("/time-slots/:id/dates", authenticateUser, controller.getDateSlots);
+    
+    router.get("/time-slots/:id",authenticateUser,controller.getTimeslots);
+    router.get("/time-slots/:id/dates",authenticateUser,controller.getDateSlots);
+    
     router.get("/fetchWallet/:id",authenticateUser,controller.getWallet);
     router.get("/transactions", authenticateUser, controller.getTransactions);
+    router.post("/fetchPrescription",authenticateUser,controller.fetchPrescription);
+    router.post("/downloadPrescription", authenticateUser, controller.downloadPrescription);
+
 
 
     /*  Booking Routes for booking Controller  */

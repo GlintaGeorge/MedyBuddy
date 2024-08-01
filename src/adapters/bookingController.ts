@@ -10,8 +10,8 @@ import { getUserById } from "../app/use-cases/user/auth/userAuth";
 import { BookingDbRepositoryInterface} from "../app/interfaces/bookingrepository";
 import { BookingRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/bookingRepositoryMongodb";
 import { BookingEntityType } from "../entities/bookingEntity";
-import { appoinmentBooking, changeAppoinmentstaus, changeWallet, checkIsBooked, createPayment, getBookingByBookingId, getBookingByDoctorId, getBookingByUserId, getWalletBalance, updateBookingStatus, updateBookingStatusPayment, walletDebit } from "../app/use-cases/user/auth/booking/bookingUser";
-
+import { appoinmentBooking, changeAppoinmentstaus, changeAppoinmentStatus, changeWallet, changeWalletAmounti, checkIsBooked, createPayment, getBookingByBookingId, getBookingByDoctorId, getBookingByUserId, getWalletBalance, updateBookingStatus, updateBookingStatusPayment, walletDebit } from "../app/use-cases/user/auth/booking/bookingUser";
+import { UpdateTheTimeslot,UpdateTimeslot } from "../app/use-cases/doctor/timeslot";
 
 const bookingController=(
     userDbRepository: userDbInterface,
@@ -34,10 +34,13 @@ const bookingController=(
         res:Response,
         next:NextFunction,
     )=>{
+      
+
         try {
+
             const {userId,...data} = req.body;
         
-             console.log(data,"............................body...................")
+             
             const checkBooking:any = await checkIsBooked(
               data,
               userId,
@@ -59,14 +62,11 @@ const bookingController=(
                   
               );
   
-                console.log(createBooking,"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                
               const user = await getUserById(userId,dbRepositoryUser)
-              console.log(user,"#######################################")
+              
 
-              console.log(user?.name)
-              console.log( user?.email)
-              console.log(createBooking.id)
-              console.log(createBooking.fee)
+            
 
               const sessionId= await createPayment(
                 user?.name!,
@@ -75,7 +75,11 @@ const bookingController=(
                 createBooking.fee,  
               );
 
-                console.log(sessionId,"111111111111111111111111111111111")
+              // /make the timeslot to falsee 
+              if(createBooking){
+               await UpdateTimeslot(data.doctorId,data.timeSlot,data.date,dbTimeSlotRepository);
+              }
+                
               res.status(HttpStatus.OK).json({
                   success: true,
                   message: "Booking created successfully",
@@ -131,6 +135,7 @@ const bookingController=(
           );
 
           const walletTransaction = await walletDebit(userId,requiredAmount,dbBookingRepository);
+          const walletChange=await changeWalletAmounti(userId,requiredAmount,dbBookingRepository)
 
           res.status(HttpStatus.OK).json({
             success: true,
@@ -224,13 +229,19 @@ const bookingController=(
       const {cancelReason} = req.body;
       const {id} = req.params;
 
-      const updateBooking = await changeAppoinmentstaus(
+
+      const { doctorId, timeSlot, date } = await changeAppoinmentstaus(
         appoinmentStatus,
         cancelReason,
         id,
         dbBookingRepository
       );
 
+     
+     
+    if (doctorId && timeSlot && date) {
+      await UpdateTheTimeslot(doctorId, timeSlot, date, dbTimeSlotRepository);
+    }
       res
         .status(HttpStatus.OK)
         .json({ success: true, message: "Cancel Appoinment" });
@@ -341,6 +352,31 @@ const bookingController=(
     }
   };
 
+   /* method put update appoinmentStatus*/
+   const appoinmentStatus = async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+  )=>{
+    try {
+      const {appoinmentStatus} = req.body;
+      const {id} = req.params;
+
+
+       await changeAppoinmentStatus(
+        appoinmentStatus,
+        id,
+        dbBookingRepository
+      );
+
+      res
+        .status(HttpStatus.OK)
+        .json({ success: true, message: "Consultation Status Updated " });
+
+    } catch (error) {
+      next(error)
+    }
+  }
 
 
 
@@ -356,6 +392,8 @@ const bookingController=(
         getAppoinmentList,
         walletPayment,
         changeWalletAmount,
+        appoinmentStatus,
+
         }
    
 }

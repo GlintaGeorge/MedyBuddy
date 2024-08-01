@@ -1,7 +1,5 @@
-import mongoose from "mongoose";
 import { BookingEntityType } from "../../../../entities/bookingEntity";
 import Booking from "../../models/booking";
-import { Types } from "mongoose";
 import wallet from "../../models/wallet";
 import Transactions from "../../models/transations";
 
@@ -14,7 +12,7 @@ export const bookingRepositoryMongodb = () => {
       patientAge: data.getPatientAge(),
       patientNumber: data.getPatientNumber(),
       patientGender: data.getPatientGender(),
-      consultationType: data.getConsultationType(),
+      // consultationType: data.getConsultationType(),
       fee: data.getFee(),
       paymentStatus: data.getPaymentStatus(),
       appoinmentStatus: data.getAppoinmentStatus(),
@@ -50,6 +48,15 @@ export const bookingRepositoryMongodb = () => {
   const changeBookingStatus = async (appoinmentStatus: string, cancelReason: string, id: string) => {
     try {
       await Booking.findByIdAndUpdate(id, { appoinmentStatus: appoinmentStatus, appoinmentCancelReason: cancelReason });
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+    }
+  };
+
+  
+  const changeBookingAppoinmentStatus = async (appoinmentStatus: string,id: string) => {
+    try {
+      await Booking.findByIdAndUpdate(id, { appoinmentStatus: appoinmentStatus});
     } catch (error) {
       console.error('Error updating booking status:', error);
     }
@@ -130,6 +137,8 @@ export const bookingRepositoryMongodb = () => {
     getWalletBalance,
     amountDebit,
     amountCredit,
+    changeBookingAppoinmentStatus,
+    
   };
 };
 

@@ -18,7 +18,6 @@ export const loginAdmin = async (
         "admin"
       );
 
-      console.log('admin login');
       
       return  {accessToken,refreshToken} ;
     }

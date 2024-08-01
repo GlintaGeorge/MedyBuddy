@@ -10,6 +10,13 @@ import { userDbInterface } from "../app/interfaces/userDbRepository";
 import { userRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/userRepositoryMongodb";
 import { doctorRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/doctorRepositoryMongodb";
 import { TimeSlotDbInterface } from "../app/interfaces/timeSlotDbRepository";
+import { getSingleUser } from "../app/use-cases/admin/adminRead";
+import { getPatients,getPatientFullDetails} from "../app/use-cases/doctor/doctorRead";
+import { BookingDbRepositoryInterface} from "../app/interfaces/bookingrepository";
+import { addPrescriptionToUser, deletePrescriptionData, fetchPrescriptionForDoctor, fetchPrescriptionUsecase } from "../app/use-cases/prescription/prescriptionUsecase";
+import { PrescriptionDbInterface } from "../app/interfaces/prescriptionDbRepositort";
+import { PrescriptionRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/prescriptionRepositoryMongodb";
+import { BookingRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/bookingRepositoryMongodb";
 import { TimeSlotRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/timeSlotRepositoryMongodb";
 import {
     addNewDoctor,
@@ -21,13 +28,15 @@ import {
 import { IDepartmentRepository } from "../app/interfaces/departmentRepositoryInterface";
 import { listDepartments } from "../app/use-cases/admin/adminDepartment";
 
-import { addTimeSlot, deleteTimeSlot, getTimeSlotsByDoctorId, } from "../app/use-cases/doctor/timeslot";
+import { addTimeSlot, deleteTimeSlot, getTimeSlotsByDoctorId } from "../app/use-cases/doctor/timeslot";
 
 import {getDoctorProfile,
   updateDoctor,
   DoctorRejected
  
     } from "../../src/app/use-cases/doctor/read&update/profile";
+
+    import { TimeSlotEntityType } from "../entities/timeSlotEntity";
 
 const doctorController = (
     authServiceInterface:AuthServiceInterfaceType,
@@ -39,6 +48,10 @@ const doctorController = (
     userDbRepository: userDbInterface,
     userRepositoryImpl: userRepositoryMongodbType,
     departmentDbRepository: IDepartmentRepository,
+    bookingDbRepository: BookingDbRepositoryInterface,
+    bookingDbRepositoryImpl: BookingRepositoryMongodbType,
+    prescriptionDbRepository:PrescriptionDbInterface,
+    prescriptionDbRepositoryImpl:PrescriptionRepositoryMongodbType,
   departmentDbRepositoryImpl: () => any
    
    
@@ -49,6 +62,9 @@ const doctorController = (
     const dbTimeSlotRepository = timeSlotDbRepository(timeSlotDbRepositoryImpl());
     const dbRepositoryUser = userDbRepository(userRepositoryImpl());
     const dbDepartmentRepository = departmentDbRepository(departmentDbRepositoryImpl());
+    const dbBookingRepository = bookingDbRepository(bookingDbRepositoryImpl());
+    const dbPrescriptionRepository = prescriptionDbRepository(prescriptionDbRepositoryImpl());
+    
 
     // doctor signup method POST
 
@@ -152,14 +168,11 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     next:NextFunction
   )=>{
     try{
-      console.log("haiiiiiiiiiiiiii");
       const doctorId = req.doctor;
       const doctor = await getDoctorProfile(
         doctorId,
         dbRepositoryDoctor
       );
-      console.log(doctor,".......................................................")
-      console.log(doctor?.department,"poiuytrewq");
       res.status(200).json({success:true,doctor});
 
     }catch(error){
@@ -207,85 +220,91 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
   };
 
+  
+
+
+
   /*
-   * * METHOD :GET
-   * return all time slot to the doctor
+   * * METHOD :POST
+   * adding a time slot
    */
-  const getTimeSlots = async (
+  const scheduleTime = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
       const doctorId = req.doctor;
-      const timeSlots = await getTimeSlotsByDoctorId(
+      const {slotTime , date } = req.body // Destructure time and date from req.body
+  
+      const newTimeSlot = await addTimeSlot(
         doctorId,
-        dbTimeSlotRepository
-      );
-      res.status(HttpStatus.OK).json({ success: true, timeSlots });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-   /* add slot Method post*/ 
-   
-   const addSlot = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const { doctorId, startDate, endDate, slotTime } = req.body;
-      console.log('slot adddddddddddddddd');
-      
-      const data = { doctorId, startDate, endDate, slotTime };
-      const response = await addTimeSlot(
-        data,
+        {
+          slotTime,  date,
+          isAvailable:true,
+        }, // Pass time and date as an object
         dbTimeSlotRepository
       );
   
-      console.log('====================================');
-      console.log('slot adddddddddddddddddddddddddddddddddddddddddddddd');
-      console.log('====================================');
       res.status(HttpStatus.OK).json({
         success: true,
-        message: "slots added successfully",
-        response, 
-        
+        message: "Time slot added successfully",
+        newTimeSlot,
       });
     } catch (error) {
       next(error);
     }
   };
 
-  /* Method Delete - slot delete*/
-  const deleteSlot = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      
-      const{ id } = req.params;
-      await deleteTimeSlot(id, dbTimeSlotRepository);
-      res
-        .status(HttpStatus.OK)
-        .json({ success: true, message: "Slot deleted successfully" });
-    } catch (error) {
-      next(error);
+    /*
+   * * METHOD :GET
+   * return all time slot to the doctor
+   */
+    const getTimeSlots = async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        const doctorId = req.doctor;
+        // const { date } = req.params; 
+        const timeSlots = await getTimeSlotsByDoctorId(
+          doctorId,
+          // date,
+          dbTimeSlotRepository
+        );
+        res.status(HttpStatus.OK).json({ success: true, timeSlots });
+      } catch (error) {
+        next(error);
+      }
+    };
+  
+      /*
+   * * METHOD :DELETE
+   * removing the timeslot to the doctor
+   */
+    const removeTimeSlot = async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ) => {
+      try {
+        
+        const{ id } = req.params;
+        await deleteTimeSlot(id, dbTimeSlotRepository);
+        res
+          .status(HttpStatus.OK)
+          .json({ success: true, message: "Slot deleted successfully" });
+      } catch (error) {
+        next(error);
+      }
     }
-  }
-
-  // list department - get
-  // get : lists a department by ID.
   const listDepartmentsHandler = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      console.log("qwertyuiopasdfghjkl,mnbvcx")
       const departments = await listDepartments(dbDepartmentRepository);
       return res.status(HttpStatus.OK).json({ success: true, departments });
     } catch (error) {
@@ -323,6 +342,102 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
+  /* method get doctor details */
+  const userDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      
+      const {id} = req.params;
+      const user = await getSingleUser(id,dbRepositoryUser);
+      return res.status(HttpStatus.OK).json({ success: true, user });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  const getPatientList = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const patients = await getPatients(dbBookingRepository);
+      return res.status(HttpStatus.OK).json({ success: true, patients });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  const getPatientDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const {id} = req.params;
+      const patient = await getPatientFullDetails(id,dbBookingRepository);
+      return res.status(HttpStatus.OK).json({ success: true, patient });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /* method post - add prescription */
+  const addPrescription = async (
+    req:Request,
+    res:Response,
+    next:NextFunction
+  )=>{
+    try {
+      const {appointmentId,prescriptionDate, medicines }=req.body
+      const data={appointmentId,prescriptionDate,medicines}
+      const response = await addPrescriptionToUser(
+        data,
+        dbPrescriptionRepository
+      );
+      res
+        .status(HttpStatus.OK)
+        .json({ success: true, message: "add Prescription successfully",response });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**get Method fetch Prescription */
+const fetchPrescription = async(
+  req:Request,
+  res:Response,
+  next:NextFunction
+)=>{
+  try {
+    const { id } = req.params;
+    const data =  id 
+    const response = await fetchPrescriptionForDoctor(data,dbPrescriptionRepository);
+    res.status(HttpStatus.OK).json({sucess:true,response});
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**method delete - delete prescription */
+const deletePrescription = async (
+  req:Request,
+  res:Response,
+  next:NextFunction,
+)=>{
+  try {
+    const prescriptionId = req.params.id;
+    const response = await deletePrescriptionData(prescriptionId,dbPrescriptionRepository);
+    res.status(HttpStatus.OK).json({sucess:true,response});
+  } catch (error) {
+    next(error);
+  }
+}
+
+
   
 
 
@@ -336,12 +451,24 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
         updateDoctorInfo,
         doctorStatus,
         googleSignIn,
+        scheduleTime,
         getTimeSlots,
-        addSlot,
-        deleteSlot,
+        removeTimeSlot,
+
         listDepartmentsHandler,
         getDoctorDetails,
         getDoctorRejected,
+        userDetails,
+        getPatientList,
+        getPatientDetails,
+        addPrescription,
+        fetchPrescription,
+        deletePrescription,
+        
+
+
+
+
 
         
 

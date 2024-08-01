@@ -20,7 +20,6 @@ export const userDbRepository = (
 
     const getUserbyId = async (id: string)=> {
         const res = await repository.getUserbyId(id); 
-        console.log(res,"...........................................................")
         return res
     }
     

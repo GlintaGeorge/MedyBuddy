@@ -7,6 +7,8 @@ import { doctorVerificationRejectedEmailPage } from "../../../utils/doctorVerifi
 export const getUsers = async (userDbRepository: ReturnType<userDbInterface>) =>
     await userDbRepository.getAllUsers();
 
+export const getSingleUser = async ( id: string, userDbRepository: ReturnType<userDbInterface>) =>
+  await userDbRepository.getUserbyId(id);
 
 
 export const getSingleDoctor = async ( id: string, doctorDbRepository: ReturnType<doctorDbInterface>) =>
@@ -59,3 +61,8 @@ export const getDoctorRejected = async ( id: string,status:string,reason:string 
     }
   }
   
+  export const getAllTheAppoinments = async (doctorDbRepository: ReturnType<doctorDbInterface>) =>
+    await doctorDbRepository.getAllAppoinments();
+
+  export const getAllThePayments = async (doctorDbRepository: ReturnType<doctorDbInterface>) =>
+    await doctorDbRepository.getAllPayments();

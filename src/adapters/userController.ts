@@ -23,9 +23,13 @@ import { listDepartments } from "../app/use-cases/admin/adminDepartment";
 import { IDepartmentRepository } from "../app/interfaces/departmentRepositoryInterface";
 import { TimeSlotDbInterface } from "../app/interfaces/timeSlotDbRepository";
 import { TimeSlotRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/timeSlotRepositoryMongodb";
-import { getTimeSlotsByDoctorId, getDateSlotsByDoctorId, getAllTimeSlotsByDoctorId } from "../app/use-cases/doctor/timeslot";
-import { getAllTimeSlot } from "../app/use-cases/user/auth/timeSlots/getAndUpdate";
+import {  getDateSlotsByDoctorId, getTimeSlotsByDoctorId, getTimeSlotsByDoctorIdAndDate} from "../app/use-cases/doctor/timeslot";
+// import { getAllTimeSlot } from "../app/use-cases/user/auth/timeSlots/getAndUpdate";
 import { departmentRepositoryMongodb } from "../frameworks/database/mongodb/repositories/departmentRepositoryMongodb";
+import { fetchPrescriptionUsecase} from "../app/use-cases/prescription/prescriptionUsecase";
+import { PrescriptionDbInterface } from "../app/interfaces/prescriptionDbRepositort";
+import { PrescriptionRepositoryMongodbType } from "../frameworks/database/mongodb/repositories/prescriptionRepositoryMongodb";
+import PDFDocument from 'pdfkit';
 
 const userController = (
     authServiceInterface: AuthServiceInterfaceType,
@@ -38,12 +42,15 @@ const userController = (
     departmentDbRepositoryImpl: ReturnType<typeof departmentRepositoryMongodb>,
     timeSlotDbRepository: TimeSlotDbInterface,
     timeSlotDbRepositoryImpl: TimeSlotRepositoryMongodbType,
+    prescriptionDbRepository:PrescriptionDbInterface,
+    prescriptionDbRepositoryImpl:PrescriptionRepositoryMongodbType,
 ) => {
     const dbRepositoryUser = userDbRepository(userRepositoryImpl());
     const authService = authServiceInterface(authServiceImpl());
     const dbDoctorRepository = doctorDbRepository(doctorDbRepositoryImpl());
     const dbTimeSlotRepository = timeSlotDbRepository(timeSlotDbRepositoryImpl());
     const dbDepartmentRepository = departmentDbRepository(departmentDbRepositoryImpl);
+    const dbPrescriptionRepository = prescriptionDbRepository(prescriptionDbRepositoryImpl());
 
     // Register User POST - Method
     const registerUser = async (
@@ -181,7 +188,7 @@ const userController = (
         next: NextFunction
     ) => {
         try {
-            const userId = req.user;
+            const userId = (req as any ).user as string ;
             const user = await getUserProfile(
                 userId,
                 dbRepositoryUser
@@ -198,7 +205,7 @@ const userController = (
         next: NextFunction
     ) => {
         try {
-            const userId = req.user;
+            const userId = (req as any ).user as string ;
             const updateData = req.body;
             const user = await updateUser(userId, updateData, dbRepositoryUser);
             res.status(200)
@@ -272,54 +279,50 @@ const userController = (
         }
     };
 
-    const getAllTimeSlots = async (
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const timeslots = await getAllTimeSlot(dbTimeSlotRepository);
-            return res.status(HttpStatus.OK).json({ success: true, timeslots });
-        } catch (error) {
-            next(error);
-        }
-    };
+   //get : get time slot by doctor Id
+  const getTimeslots = async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+  )=>{
+    try{
+    const {id} = req.params;
+    const {date} = req.query; 
+  
+    const timeSlots = await getTimeSlotsByDoctorId(
+      id,
+      dbTimeSlotRepository
+    )
+    res.status(HttpStatus.OK).json({ success: true, timeSlots });
+  }catch (error) {
+    next(error);
+  }
+  }
 
-    const getTimeslots = async (
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const { id } = req.params;
-            const { date } = req.query;
-            const timeSlots = await getAllTimeSlotsByDoctorId(
-                id,
-                date,
-                dbTimeSlotRepository
-            );
-            res.status(HttpStatus.OK).json({ success: true, timeSlots });
-        } catch (error) {
-            next(error);
-        }
-    };
-
-    const getDateSlots = async (
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const { id } = req.params;
-            const dateSlots = await getDateSlotsByDoctorId(
-                id,
-                dbTimeSlotRepository
-            );
-            res.status(HttpStatus.OK).json({ success: true, dateSlots });
-        } catch (error) {
-            next(error);
-        }
+  //get : get date slot by doctor Id 
+  const getDateSlots = async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+  )=>{
+    try{
+    const {id} = req.params;
+    const { date }  = req.query ;
+    const dateString = date as string;
+    if (date) {
+      // Fetch time slots for a specific date
+      const timeSlots = await getTimeSlotsByDoctorIdAndDate(id, dateString, dbTimeSlotRepository);
+      return res.status(HttpStatus.OK).json({ success: true, timeSlots });
+    } else {
+      // Fetch all dates
+      const dateSlots = await getDateSlotsByDoctorId(id, dbTimeSlotRepository);
+      return res.status(HttpStatus.OK).json({ success: true, dateSlots });
     }
+  }catch (error) {
+    next(error);
+  }
+  }
+
 
 //     **
 //    * * METHOD :GET
@@ -348,7 +351,7 @@ const getTransactions = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user;
+    const userId = (req as any ).user as string ;
     const transaction = await WalletTransactions(userId, dbRepositoryUser);
     res.status(200).json({
       success: true,
@@ -360,6 +363,69 @@ const getTransactions = async (
   }
 };
 
+/**get Method fetch Prescription */
+const fetchPrescription = async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+  )=>{
+    try {
+      const {appoinmentId} = req.body;
+      const data = {appoinmentId}
+      const response = await fetchPrescriptionUsecase(data,dbPrescriptionRepository);
+      res.status(HttpStatus.OK).json({sucess:true,response});
+    } catch (error) {
+      next(error)
+    }
+  }
+
+
+ const downloadPrescription = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { appointmentId } = req.body;
+        const data = { appointmentId };
+        const response = await fetchPrescriptionUsecase(data, dbPrescriptionRepository);
+
+        if (!response) {
+            return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: "Prescription not found" });
+        }
+
+        // Create a PDF document
+        const doc = new PDFDocument();
+
+        // Set the response to handle the file download
+        res.setHeader('Content-Disposition', 'attachment; filename=prescription.pdf');
+        res.setHeader('Content-Type', 'application/pdf');
+
+        // Pipe the PDF into the response
+        doc.pipe(res);
+
+        // Add content to the PDF
+        doc.fontSize(25).text('Prescription', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(20).text(`Doctor: ${response.doctorId}`, { align: 'left' });
+        doc.fontSize(20).text(`User: ${response.userId}`, { align: 'left' });
+        doc.fontSize(20).text(`Date: ${response.prescriptionDate}`, { align: 'left' });
+
+        doc.moveDown();
+        doc.fontSize(15).text('Medicines:', { align: 'left' });
+        response.medicines.forEach((medicine: any) => {
+            doc.fontSize(12).text(`- Name: ${medicine.name}`, { align: 'left' });
+            doc.fontSize(12).text(`  Dosage: ${medicine.dosage}`, { align: 'left' });
+            doc.fontSize(12).text(`  Instructions: ${medicine.instructions}`, { align: 'left' });
+            doc.moveDown();
+        });
+
+        // Finalize the PDF and end the stream
+        doc.end();
+    } catch (error) {
+        next(error);
+    }
+};
     return {
         registerUser,
         verifyOtp,
@@ -373,12 +439,13 @@ const getTransactions = async (
         doctorPage,
         doctorDetails,
         listDepartmentsHandler,
-        getAllTimeSlots,
         getTimeslots,
         getDateSlots,
         getWallet,
         getTransactions,
-
+        fetchPrescription,
+        downloadPrescription,
+        
 
     };
 };

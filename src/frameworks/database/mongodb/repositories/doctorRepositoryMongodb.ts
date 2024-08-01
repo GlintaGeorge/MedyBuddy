@@ -2,7 +2,8 @@ import { doctorEntityType, googleSignInUserEntityType } from "../../../../entiti
 import { DoctorInterface } from "../../../../types/doctorInterface";
 import Doctor from "../../models/doctor";
 import timeSlots from "../../models/timeSlots";
-
+import Booking from "../../models/booking";
+import transations from "../../models/transations";
 
 export const doctorRepositoryMongodb = () =>{
 
@@ -27,7 +28,7 @@ export const doctorRepositoryMongodb = () =>{
       verificationToken: doctorData.getVerificationToken(),
       phoneNumber:doctorData.getPhoneNumber(),
       department:doctorData.getDepartment(),
-      consultationType:doctorData.getConsultationType(),
+      // consultationType:doctorData.getConsultationType(),
       education:doctorData.getEducation(),
       description:doctorData.getDescription(),
       experience:doctorData.getExperience(),
@@ -158,7 +159,18 @@ export const doctorRepositoryMongodb = () =>{
     
       return { total, doctors };
     };
-  
+
+    const getAllAppoinments =async () =>{
+      const res = await Booking.find({ 
+          appoinmentStatus: { $in: ["Booked", "Consulted"] } 
+        });
+        return res
+  }
+
+    const getAllPayments = async () => {
+      const res = await Booking.find({ paymentStatus: "Success" })
+      return res
+    }; 
 
 
   return {
@@ -174,6 +186,8 @@ export const doctorRepositoryMongodb = () =>{
     getRejectedDoctorById,
     getDoctorByIdUpdateRejected,
     getFilteredDoctors,
+    getAllAppoinments,
+    getAllPayments,
     
     
     
