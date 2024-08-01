@@ -16,7 +16,8 @@ const prescriptionUsecase_1 = require("../app/use-cases/prescription/prescriptio
 const authDoctor_1 = require("../app/use-cases/doctor/authDoctor");
 const adminDepartment_1 = require("../app/use-cases/admin/adminDepartment");
 const timeslot_1 = require("../app/use-cases/doctor/timeslot");
-const profile_1 = require("../../src/app/use-cases/doctor/read&update/profile");
+const profile_1 = require("../app/use-cases/doctor/read&update/profile");
+// import { TimeSlotEntityType } from "../entities/timeSlotEntity";
 const doctorController = (authServiceInterface, authServiceImpl, doctorDbRepository, doctorDbRepositoryImpl, timeSlotDbRepository, timeSlotDbRepositoryImpl, userDbRepository, userRepositoryImpl, departmentDbRepository, bookingDbRepository, bookingDbRepositoryImpl, prescriptionDbRepository, prescriptionDbRepositoryImpl, departmentDbRepositoryImpl) => {
     const authService = authServiceInterface(authServiceImpl());
     const dbRepositoryDoctor = doctorDbRepository(doctorDbRepositoryImpl());
