@@ -1,6 +1,6 @@
 import {Request,Response,NextFunction} from "express";
-import DoctorEntity,{doctorEntityType,googleSignInUserEntity,googleSignInUserEntityType} from "../entities/doctorEntity"
-import asynchandler from "express-async-handler";
+// import DoctorEntity,{doctorEntityType,googleSignInUserEntity,googleSignInUserEntityType} from "../entities/doctorEntity"
+// import asynchandler from "express-async-handler";
 import { AuthServiceInterfaceType, authServiceInterface } from "../app/service-interface/authServiceInterface";
 import { AuthService } from "../frameworks/services/authService";
 import { HttpStatus } from "../types/httpStatus";
@@ -33,10 +33,9 @@ import { addTimeSlot, deleteTimeSlot, getTimeSlotsByDoctorId } from "../app/use-
 import {getDoctorProfile,
   updateDoctor,
   DoctorRejected
- 
-    } from "../../src/app/use-cases/doctor/read&update/profile";
+   } from "../app/use-cases/doctor/read&update/profile";
 
-    import { TimeSlotEntityType } from "../entities/timeSlotEntity";
+    // import { TimeSlotEntityType } from "../entities/timeSlotEntity";
 
 const doctorController = (
     authServiceInterface:AuthServiceInterfaceType,
